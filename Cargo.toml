@@ -1,6 +1,6 @@
 [package]
-name = "img-fuse"
-version = "0.2.0"
+name = "md-fuse"
+version = "0.0.1"
 authors = ["Caio O Campos <caio.campos1204@gmail.com.br>"]
 edition = "2018"
 
