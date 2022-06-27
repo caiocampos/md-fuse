@@ -1,8 +1,6 @@
 mod lib;
 
-use lib::process;
-
-pub const CONF_FILE: &str = "md.conf.json";
+use lib::{process, CONF_FILE};
 
 fn main() {
     process(&CONF_FILE);

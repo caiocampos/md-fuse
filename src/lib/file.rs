@@ -1,5 +1,4 @@
-use std::fs;
-use std::path::MAIN_SEPARATOR;
+use std::{fs, path::MAIN_SEPARATOR};
 
 pub fn generate_text<S: ToString>(folder: &S, inputs: &Vec<S>) -> Result<String, String> {
     let mut result = String::new();
