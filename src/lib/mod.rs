@@ -1,2 +1,5 @@
-pub mod configuration;
-pub mod file;
+mod configuration;
+mod file;
+mod process;
+
+pub use process::process;

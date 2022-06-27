@@ -35,13 +35,22 @@ impl Default for Conf {
 }
 
 impl Conf {
-    pub fn load(path: &str) -> Self {
-        if let Ok(file) = File::open(path) {
-            if let Ok(json) = read_json(BufReader::new(file)) {
-                return Self::from(&json);
-            }
+    pub fn load(path: &str) -> Result<Self, String> {
+        match File::open(path) {
+            Ok(file) => match read_json(BufReader::new(file)) {
+                Ok(json) => Ok(Self::from(&json)),
+                Err(err) => Err(format!(
+                    "Could not read the file {} \nError: {}",
+                    &path,
+                    err.to_string()
+                )),
+            },
+            Err(err) => Err(format!(
+                "Could not load the file {} \nError: {}",
+                &path,
+                err.to_string()
+            )),
         }
-        Self::default()
     }
 
     fn from(other: &Self) -> Self {

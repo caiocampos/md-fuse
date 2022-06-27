@@ -1,5 +1,5 @@
 [package]
-name = "md-fuse"
+name = "md_fuse"
 version = "0.0.1"
 authors = ["Caio O Campos <caio.campos1204@gmail.com.br>"]
 edition = "2018"
@@ -7,3 +7,8 @@ edition = "2018"
 [dependencies]
 serde = { version = "1.0.118", features = ["derive"] }
 serde_json = "1.0.69"
+
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "./src/lib/mod.rs"
