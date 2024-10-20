@@ -1,5 +1,7 @@
 use std::{fs, path::MAIN_SEPARATOR};
 
+use crate::configuration::TemplateFileParametersConf;
+
 pub fn generate_text<S: ToString>(folder: &S, inputs: &Vec<S>) -> Result<String, String> {
     let mut result = String::new();
     for path in inputs {
@@ -14,6 +16,31 @@ pub fn generate_text<S: ToString>(folder: &S, inputs: &Vec<S>) -> Result<String,
                 ))
             }
         }
+    }
+    Ok(result)
+}
+
+pub fn generate_from_template<S: ToString>(
+    folder: &S,
+    input: &S,
+    parameters: &Vec<TemplateFileParametersConf>,
+) -> Result<String, String> {
+    let mut result: String;
+    let full_path = parse_folder(folder) + &input.to_string();
+    match fs::read_to_string(&full_path) {
+        Ok(text) => result = text,
+        Err(err) => {
+            return Err(format!(
+                "Could not load the file {} \nError: {}",
+                &full_path,
+                err.to_string()
+            ))
+        }
+    }
+    for parameter in parameters {
+        let TemplateFileParametersConf { name, value } = parameter;
+        let template: String = format!("{{{{{}}}}}", &name);
+        result = result.replace(&template, value);
     }
     Ok(result)
 }

@@ -14,11 +14,33 @@ pub struct FileConf {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct TemplateFileParametersConf {
+    #[serde(default)]
+    pub name: String,
+    #[serde(default)]
+    pub value: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct TemplateFileConf {
+    #[serde(default)]
+    pub name: String,
+    #[serde(default)]
+    pub input: String,
+    #[serde(default)]
+    pub parameters: Vec<TemplateFileParametersConf>,
+    #[serde(default)]
+    pub output: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Conf {
     #[serde(default)]
     pub input_folder: String,
     #[serde(default)]
     pub output_folder: String,
+    #[serde(default)]
+    pub template_files: Vec<TemplateFileConf>,
     #[serde(default)]
     pub files: Vec<FileConf>,
 }
@@ -28,6 +50,7 @@ impl Default for Conf {
         Conf {
             input_folder: "".into(),
             output_folder: "".into(),
+            template_files: [].into(),
             files: [].into(),
         }
     }
@@ -59,6 +82,9 @@ impl Conf {
         }
         if !other.output_folder.is_empty() {
             res.output_folder = other.output_folder.clone();
+        }
+        if !other.template_files.is_empty() {
+            res.template_files = other.template_files.clone();
         }
         if !other.files.is_empty() {
             res.files = other.files.clone();
