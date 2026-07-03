@@ -40,6 +40,8 @@ pub struct Conf {
     #[serde(default)]
     pub output_folder: String,
     #[serde(default)]
+    pub dictionary_inputs: Vec<String>,
+    #[serde(default)]
     pub template_files: Vec<TemplateFileConf>,
     #[serde(default)]
     pub files: Vec<FileConf>,
@@ -50,6 +52,7 @@ impl Default for Conf {
         Conf {
             input_folder: "".into(),
             output_folder: "".into(),
+            dictionary_inputs: [].into(),
             template_files: [].into(),
             files: [].into(),
         }
@@ -82,6 +85,9 @@ impl Conf {
         }
         if !other.output_folder.is_empty() {
             res.output_folder = other.output_folder.clone();
+        }
+        if !other.dictionary_inputs.is_empty() {
+            res.dictionary_inputs = other.dictionary_inputs.clone();
         }
         if !other.template_files.is_empty() {
             res.template_files = other.template_files.clone();
