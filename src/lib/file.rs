@@ -67,9 +67,22 @@ pub fn generate_from_template<S: ToString>(
     for parameter in parameters {
         let TemplateFileParametersConf { name, value } = parameter;
         let template: String = format!("{{{{{}}}}}", &name);
-        let env_prefix = "ENV_VAR:";
         let dict_prefix = "DICT_VAR:";
-        if value.starts_with(env_prefix) {
+        let env_prefix = "ENV_VAR:";
+        if value.starts_with(dict_prefix) {
+            let dict_key = value.strip_prefix(dict_prefix).unwrap_or("");
+            let dict_value = match dictionary.get(dict_key) {
+                Some(res) => res.to_string(),
+                None => {
+                    println!(
+                        "Could not find the variable \"{}\"",
+                        dict_key
+                    );
+                    "".to_string()
+                }
+            };
+            result = result.replace(&template, &dict_value);
+        } else if value.starts_with(env_prefix) {
             let env_key = value.strip_prefix(env_prefix).unwrap_or("");
             let env_value = match env::var(env_key) {
                 Ok(res) => res,
@@ -83,19 +96,6 @@ pub fn generate_from_template<S: ToString>(
                 }
             };
             result = result.replace(&template, &env_value);
-        } else if value.starts_with(dict_prefix) {
-            let dict_key = value.strip_prefix(dict_prefix).unwrap_or("");
-            let dict_value = match dictionary.get(dict_key) {
-                Some(res) => res.to_string(),
-                None => {
-                    println!(
-                        "Could not find the variable \"{}\"",
-                        dict_key
-                    );
-                    "".to_string()
-                }
-            };
-            result = result.replace(&template, &dict_value);
         } else {
             result = result.replace(&template, value);
         }
