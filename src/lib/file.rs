@@ -1,19 +1,30 @@
-use std::{collections::HashMap, env, fs, path::MAIN_SEPARATOR};
+use std::{
+    collections::HashMap,
+    env, fs,
+    path::{Path, PathBuf},
+};
 
 use crate::configuration::TemplateFileParametersConf;
 
-pub fn read_dictionary_inputs<S: ToString>(
-    folder: &S,
-    path: &S,
+macro_rules! merge_path {
+    ($( $element:expr ),+ $(,)?) => {
+        merge_path(&[ $( $element ),+ ])
+    };
+}
+
+pub fn read_dictionary_inputs<P: AsRef<Path>>(
+    folder: &P,
+    subfolder: &P,
+    path: &P,
 ) -> Result<HashMap<String, String>, String> {
-    let full_path = parse_folder(folder) + &path.to_string();
+    let full_path = merge_path!(folder, subfolder, path);
     match fs::read_to_string(&full_path) {
         Ok(text) => match serde_json::from_str(&text) {
             Ok(map) => Ok(map),
             Err(err) => {
                 return Err(format!(
                     "Could not process the file {} \nError: {}",
-                    &full_path,
+                    full_path.display(),
                     err.to_string()
                 ));
             }
@@ -21,23 +32,23 @@ pub fn read_dictionary_inputs<S: ToString>(
         Err(err) => {
             return Err(format!(
                 "Could not load the file {} \nError: {}",
-                &full_path,
+                full_path.display(),
                 err.to_string()
             ));
         }
     }
 }
 
-pub fn generate_text<S: ToString>(folder: &S, inputs: &Vec<S>) -> Result<String, String> {
+pub fn generate_text<P: AsRef<Path>>(folder: &P, inputs: &Vec<P>) -> Result<String, String> {
     let mut result = String::new();
     for path in inputs {
-        let full_path = parse_folder(folder) + &path.to_string();
+        let full_path = merge_path!(folder, path);
         match fs::read_to_string(&full_path) {
             Ok(text) => result += &text,
             Err(err) => {
                 return Err(format!(
                     "Could not load the file {} \nError: {}",
-                    &full_path,
+                    full_path.display(),
                     err.to_string()
                 ));
             }
@@ -46,20 +57,20 @@ pub fn generate_text<S: ToString>(folder: &S, inputs: &Vec<S>) -> Result<String,
     Ok(result)
 }
 
-pub fn generate_from_template<S: ToString>(
-    folder: &S,
-    path: &S,
+pub fn generate_from_template<P: AsRef<Path>>(
+    folder: &P,
+    path: &P,
     parameters: &Vec<TemplateFileParametersConf>,
     dictionary: &HashMap<String, String>,
 ) -> Result<String, String> {
     let mut result: String;
-    let full_path = parse_folder(folder) + &path.to_string();
+    let full_path = merge_path!(folder, path);
     match fs::read_to_string(&full_path) {
         Ok(text) => result = text,
         Err(err) => {
             return Err(format!(
                 "Could not load the file {} \nError: {}",
-                &full_path,
+                full_path.display(),
                 err.to_string()
             ));
         }
@@ -74,10 +85,7 @@ pub fn generate_from_template<S: ToString>(
             let dict_value = match dictionary.get(dict_key) {
                 Some(res) => res.to_string(),
                 None => {
-                    println!(
-                        "Could not find the variable \"{}\"",
-                        dict_key
-                    );
+                    println!("Could not find the variable \"{}\"", dict_key);
                     "".to_string()
                 }
             };
@@ -103,41 +111,46 @@ pub fn generate_from_template<S: ToString>(
     Ok(result)
 }
 
-pub fn write_text<S: ToString>(folder: &S, path: &S, text: &S) -> Result<String, String> {
-    let folder = folder.to_string();
+pub fn write_text<P: AsRef<Path>, S: ToString>(
+    folder: &P,
+    path: &P,
+    text: &S,
+) -> Result<String, String> {
     if !is_dir(&folder) {
         if let Err(err) = fs::create_dir_all(&folder) {
             return Err(format!(
                 "Could not create the folder {} \nError: {}",
-                &folder,
+                folder.as_ref().display(),
                 err.to_string()
             ));
         }
     }
-    let full_path = parse_folder(&folder) + &path.to_string();
+    let full_path = merge_path!(folder, path);
     if let Err(err) = fs::write(&full_path, text.to_string()) {
         Err(format!(
             "Could not write the file {} \nError: {}",
-            &full_path,
+            full_path.display(),
             err.to_string()
         ))
     } else {
-        Ok(full_path)
+        Ok(full_path.display().to_string())
     }
 }
 
-fn is_dir<S: ToString>(folder: &S) -> bool {
-    if let Ok(metadata) = fs::metadata(folder.to_string()) {
+fn is_dir<P: AsRef<Path>>(folder: &P) -> bool {
+    if let Ok(metadata) = fs::metadata(folder) {
         metadata.is_dir()
     } else {
         false
     }
 }
 
-fn parse_folder<S: ToString>(folder: &S) -> String {
-    let mut folder = folder.to_string();
-    if !folder.ends_with(MAIN_SEPARATOR) {
-        folder.push(MAIN_SEPARATOR);
+fn merge_path<P: AsRef<Path>>(parts: &[P]) -> PathBuf {
+    let mut path = PathBuf::new();
+    for part in parts {
+        if !part.as_ref().as_os_str().is_empty() {
+            path.push(part);
+        }
     }
-    folder
+    path
 }
