@@ -84,24 +84,14 @@ pub fn generate_from_template<P: AsRef<Path>>(
             let dict_key = value.strip_prefix(dict_prefix).unwrap_or("");
             let dict_value = match dictionary.get(dict_key) {
                 Some(res) => res.to_string(),
-                None => {
-                    println!("Could not find the variable \"{}\"", dict_key);
-                    "".to_string()
-                }
+                None => "".to_string(),
             };
             result = result.replace(&template, &dict_value);
         } else if value.starts_with(env_prefix) {
             let env_key = value.strip_prefix(env_prefix).unwrap_or("");
             let env_value = match env::var(env_key) {
                 Ok(res) => res,
-                Err(err) => {
-                    println!(
-                        "Could not find the environment variable \"{}\" \nError: {}",
-                        env_key,
-                        err.to_string()
-                    );
-                    "".to_string()
-                }
+                Err(_) => "".to_string(),
             };
             result = result.replace(&template, &env_value);
         } else {
@@ -111,11 +101,7 @@ pub fn generate_from_template<P: AsRef<Path>>(
     Ok(result)
 }
 
-pub fn write_text<P: AsRef<Path>, S: ToString>(
-    folder: &P,
-    path: &P,
-    text: &S,
-) -> Result<String, String> {
+pub fn write_text<P: AsRef<Path>>(folder: &P, path: &P, text: &String) -> Result<String, String> {
     if !is_dir(&folder) {
         if let Err(err) = fs::create_dir_all(&folder) {
             return Err(format!(
@@ -126,14 +112,14 @@ pub fn write_text<P: AsRef<Path>, S: ToString>(
         }
     }
     let full_path = merge_path!(folder, path);
-    if let Err(err) = fs::write(&full_path, text.to_string()) {
+    if let Err(err) = fs::write(&full_path, text) {
         Err(format!(
             "Could not write the file {} \nError: {}",
             full_path.display(),
             err.to_string()
         ))
     } else {
-        Ok(full_path.display().to_string())
+        Ok(full_path.to_string_lossy().into())
     }
 }
 
@@ -146,11 +132,8 @@ fn is_dir<P: AsRef<Path>>(folder: &P) -> bool {
 }
 
 fn merge_path<P: AsRef<Path>>(parts: &[P]) -> PathBuf {
-    let mut path = PathBuf::new();
-    for part in parts {
-        if !part.as_ref().as_os_str().is_empty() {
-            path.push(part);
-        }
-    }
-    path
+    parts
+        .iter()
+        .filter(|part| !part.as_ref().as_os_str().is_empty())
+        .collect()
 }

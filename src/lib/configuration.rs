@@ -52,12 +52,12 @@ pub struct Conf {
 impl Default for Conf {
     fn default() -> Self {
         Conf {
-            input_folder: "".into(),
-            output_folder: "".into(),
-            dictionary_subfolder: "".into(),
-            dictionary_inputs: [].into(),
-            template_files: [].into(),
-            files: [].into(),
+            input_folder: String::new(),
+            output_folder: String::new(),
+            dictionary_subfolder: String::new(),
+            dictionary_inputs: Vec::new(),
+            template_files: Vec::new(),
+            files: Vec::new(),
         }
     }
 }
