@@ -1,10 +1,6 @@
 name: Rust
 
 on:
-  push:
-    branches: [ master ]
-    tags:
-      - "v*.*.*"
   pull_request:
     branches: [ master ]
 
@@ -24,10 +20,3 @@ jobs:
 
     - name: Build
       run: cargo build --release --locked
-
-    - name: Create Release and Upload Binaries
-      uses: softprops/action-gh-release@v3
-      if: github.ref_type == 'tag'
-      with:
-        make_latest: true
-        files: target/release/md_fuse
